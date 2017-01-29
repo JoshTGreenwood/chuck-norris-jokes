@@ -1,7 +1,9 @@
 module App exposing (..)
 
-import Html exposing (Html, text, div, img)
+import Html exposing (..)
+import Html.Events exposing (onClick)
 import Http exposing (Error)
+import Json.Decode exposing (..)
 
 
 type alias Model =
@@ -16,6 +18,7 @@ init path =
 
 type Msg
     = Joke (Result Http.Error String)
+    | NewJoke
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -27,11 +30,15 @@ update msg model =
         Joke (Err err) ->
             ( { model | joke = "something bad happened" }, Cmd.none )
 
+        NewJoke ->
+            ( model, randomJoke )
+
 
 view : Model -> Html Msg
 view model =
     div []
-        [ div [] [ text model.joke ]
+        [ button [ onClick NewJoke ] [ text "New Joke Please!" ]
+        , div [] [ text model.joke ]
         ]
 
 
@@ -47,9 +54,14 @@ randomJoke =
             "http://api.icndb.com/jokes/random"
 
         request =
-            Http.getString url
+            Http.get url (at [ "value", "joke" ] string)
 
         cmd =
             Http.send Joke request
     in
         cmd
+
+
+decoder : Decoder String
+decoder =
+    at [ "value", "joke" ] string
