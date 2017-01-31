@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Events exposing (onClick)
 import Http exposing (Error)
 import Json.Decode exposing (..)
+import Json.Decode.Pipeline exposing (decode, required, optional)
 
 
 type alias Model =
@@ -68,15 +69,11 @@ randomJoke =
         cmd
 
 
-decoder : Decoder String
-decoder =
-    at [ "value", "joke" ] string
-
 
 responseDecoder : Decoder Response
 responseDecoder =
-    map3 Response
-        (field "id" int)
-        (field "joke" string)
-        (field "categories" (list string))
-        |> at [ "value" ]
+    decode Response
+        |> required "id" int
+        |> required "joke" string
+        |> optional "categories" (list string) []
+        |> at ["value"]
